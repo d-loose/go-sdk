@@ -21,7 +21,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^sdkcraft\\.yaml$/"],
       "matchStrings": [
-        "GOPLS_VERSION_GO_(?<depType>[0-9_]+)=\\\"(?<currentValue>v[0-9.]+)\\\""
+        "GOPLS_VERSION_GO_(?<depType>[0-9.]+):\\s*(?<currentValue>v[0-9.]+)"
       ],
       "depNameTemplate": "golang.org/x/tools/gopls",
       "datasourceTemplate": "go",
@@ -65,28 +65,28 @@
     {
       "matchPackageNames": ["golang.org/x/tools/gopls"],
       "matchBaseBranches": ["1.24"],
-      "matchDepTypes": ["1_24"],
+      "matchDepTypes": ["1.24"],
       "constraints": { "%goMod": "1.25" },
       "enabled": true
     },
     {
       "matchPackageNames": ["golang.org/x/tools/gopls"],
       "matchBaseBranches": ["1.25"],
-      "matchDepTypes": ["1_25"],
+      "matchDepTypes": ["1.25"],
       "constraints": { "%goMod": "1.26" },
       "enabled": true
     },
     {
       "matchPackageNames": ["golang.org/x/tools/gopls"],
       "matchBaseBranches": ["1.26"],
-      "matchDepTypes": ["1_26"],
+      "matchDepTypes": ["1.26"],
       "constraints": { "%goMod": "1.27" },
       "enabled": true
     },
     {
       "matchPackageNames": ["golang.org/x/tools/gopls"],
       "matchBaseBranches": ["1.27"],
-      "matchDepTypes": ["1_27"],
+      "matchDepTypes": ["1.27"],
       "constraints": { "%goMod": "1.28" },
       "enabled": true
     }

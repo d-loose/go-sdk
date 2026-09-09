@@ -66,18 +66,18 @@ parts:
     after: [go]
     plugin: nil
     override-build: |
-      GOPLS_VERSION_GO_1_24="v0.21.1"
-      GOPLS_VERSION_GO_1_25="v0.23.0"
-      GOPLS_VERSION_GO_1_26="v0.23.0"
-      GOPLS_VERSION_GO_1_27="v0.23.0"
       GO_VERSION=$(cat "$CRAFT_PROJECT_DIR/VERSION")
-      case "$GO_VERSION" in
-        1.24.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_24" ;;
-        1.25.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_25" ;;
-        1.26.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_26" ;;
-        1.27.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_27" ;;
-        *) echo "No gopls version configured for Go ${GO_VERSION}" >&2; exit 1 ;;
-      esac
+      GOPLS_VERSION=$(yq -r '."GOPLS_VERSION_GO_'"${GO_VERSION%.*}"'" // ""' <<'EOF'
+      GOPLS_VERSION_GO_1.24: v0.21.1
+      GOPLS_VERSION_GO_1.25: v0.23.0
+      GOPLS_VERSION_GO_1.26: v0.23.0
+      GOPLS_VERSION_GO_1.27: v0.23.0
+      EOF
+      )
+      if [[ -z "$GOPLS_VERSION" ]]; then
+        echo "No gopls version configured for Go ${GO_VERSION}" >&2
+        exit 1
+      fi
       export GOPATH="$CRAFT_PART_BUILD/gopath"
       # gopls may require a newer Go than the SDK ships; let Go fetch that toolchain to build it.
       CGO_ENABLED=0 \
