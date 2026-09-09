@@ -41,10 +41,10 @@ This demonstrates a basic Go build workflow with persistent module caching and
    git clone <YOUR_REPO_URL>
    ```
 
-3. On launch, the SDK configures `PATH` and `GOMODCACHE`, then installs `gopls`
-   with the workshop's Go toolchain if it is not already available. No project
-   dependency download happens automatically; project dependencies are fetched
-   during the first `go build`, `go test`, or `gopls` workspace load.
+3. On launch, the SDK configures `PATH` and `GOMODCACHE`. The SDK includes a
+   pinned `gopls` build, so no language-server installation is needed. No
+   project dependency download happens automatically; project dependencies are
+   fetched during the first `go build`, `go test`, or `gopls` workspace load.
 
 ### Build the project
 
@@ -80,9 +80,9 @@ Go installation.
 
 ### Editor integration
 
-The SDK installs `gopls`, the official Go language server, during workshop
-launch. Editors that connect to a workshop can use the `gopls` binary on `PATH`
-without a manual install step:
+The SDK includes a build of `gopls`, the official Go language server, tracking
+the latest release that supports the SDK's Go version. Editors that connect to a
+workshop can use the `gopls` binary on `PATH` without a manual install step:
 
 ```bash
 workshop shell

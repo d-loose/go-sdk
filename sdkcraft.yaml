@@ -14,16 +14,17 @@ description: |
     compiler, standard library, and all official tools (`gofmt`, `goimports`,
     etc.). The version is determined by the SDK release, not the base image.
   - `gopls`: The official Go language server for editor integrations,
-    installed on launch with the workshop's Go toolchain.
+    built for the SDK's target architecture, tracking the latest gopls that
+    supports the SDK's Go release.
   - Module cache: Configured to persist at `~/go/pkg/mod` with a bind mount
     to the host, so downloaded dependencies survive workshop updates.
   - Environment preservation: Custom Go environment variables (set via
     `go env -w`) are automatically saved and restored across workshop updates.
 
-  The SDK installs the complete official Go distribution from go.dev and installs
-  `gopls` from `golang.org/x/tools/gopls` when the workshop is launched. Build
-  tools such as `gcc` are **not** included. If your project requires CGo or needs
-  to compile C dependencies, install the necessary toolchain separately.
+  The SDK installs the complete official Go distribution from go.dev and a pinned
+  `gopls` build from `golang.org/x/tools/gopls`. Build tools such as `gcc` are
+  **not** included. If your project requires CGo or needs to compile C
+  dependencies, install the necessary toolchain separately.
 
   ## Setup actions
 
@@ -32,8 +33,7 @@ description: |
   - Adds Go binaries to `PATH` system-wide via `/etc/profile.d/go.sh`.
   - Configures `GOMODCACHE` to point to the persistent mount at
     `~/go/pkg/mod`.
-  - Installs `gopls` into the workshop user's Go bin directory if it is not
-    already available.
+  - Makes the SDK's pinned `gopls` build available on `PATH`.
   - Restores any previously changed Go environment variables.
 license: BSD-3-Clause
 website: https://github.com/canonical/go-sdk
@@ -62,3 +62,32 @@ parts:
       curl -fLO "https://go.dev/dl/go${VERSION}.linux-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
       mkdir -p "$CRAFT_PART_INSTALL"
       tar -xzf "go${VERSION}.linux-${CRAFT_ARCH_BUILD_FOR}.tar.gz" --strip-components=1 -C "$CRAFT_PART_INSTALL"
+  gopls:
+    after: [go]
+    plugin: nil
+    override-build: |
+      GOPLS_VERSION_GO_1_24="v0.21.1"
+      GOPLS_VERSION_GO_1_25="v0.23.0"
+      GOPLS_VERSION_GO_1_26="v0.23.0"
+      GOPLS_VERSION_GO_1_27="v0.23.0"
+      GO_VERSION=$(cat "$CRAFT_PROJECT_DIR/VERSION")
+      case "$GO_VERSION" in
+        1.24.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_24" ;;
+        1.25.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_25" ;;
+        1.26.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_26" ;;
+        1.27.*) GOPLS_VERSION="$GOPLS_VERSION_GO_1_27" ;;
+        *) echo "No gopls version configured for Go ${GO_VERSION}" >&2; exit 1 ;;
+      esac
+      export GOPATH="$CRAFT_PART_BUILD/gopath"
+      # gopls may require a newer Go than the SDK ships; let Go fetch that toolchain to build it.
+      CGO_ENABLED=0 \
+        GOARCH="$CRAFT_ARCH_BUILD_FOR" \
+        GOOS=linux \
+        GOTOOLCHAIN=auto \
+        "$CRAFT_STAGE/bin/go" install "golang.org/x/tools/gopls@${GOPLS_VERSION}"
+      if [[ "$CRAFT_ARCH_BUILD_FOR" == amd64 ]]; then
+        gopls="$GOPATH/bin/gopls"
+      else
+        gopls="$GOPATH/bin/linux_${CRAFT_ARCH_BUILD_FOR}/gopls"
+      fi
+      install -Dm755 "$gopls" "$CRAFT_PART_INSTALL/bin/gopls"
